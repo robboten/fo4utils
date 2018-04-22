@@ -1,0 +1,9 @@
+name "fo4utils"
+
+
+extract to $temp\robboten
+
+run  fo4installer.ms
+drop fo4installer.ms
+
+clear temp
