@@ -854,7 +854,7 @@ rollout ExportRollout "Exporter"
 		objs=(Selection as array)
 
 		for sel in iSel do (
-			selArr = (getnodebyname fo4utilsM.ExportRollout.mlbx1.items[sel] all:true)
+			selArr = (getnodebyname ExportRollout.mlbx1.items[sel] all:true)
 			for cNode in selArr do (
 				readHide=cNode.isHidden
 				if readHide != true do
@@ -926,7 +926,7 @@ rollout ExportRollout "Exporter"
 
 	--update the inlcude box manually and keep the layer manager open
 	fn updateList=(
-		fo4utilsM.ExportRollout.mlbx1.items=(getRootNodes())
+		ExportRollout.mlbx1.items=(getRootNodes())
 		macros.run "Layers" "LayerManager"
 	)
 
@@ -1310,27 +1310,31 @@ rollout MiscRollout "Misc utils"
 -------------------------  Copy and Collision  -----------------------------------------------------------
 rollout HavokRollout "Copy" width:160 height:128
 (
+	local ColLay
+	local ColMat
+
 	fn havokMod obj shiftP =(
-		clayer=ddl2.selection
-		obj.name = "c_" + obj.name
+		clayer=ColLay
+		obj.name = uniqueName ("c_" + obj.name) numDigits:2
 		collapseStack obj
 		addmodifier obj (Havok_Shape())
 		if shiftP then obj.modifiers[#Shape].shapeType = 4 else obj.modifiers[#Shape].shapeType = 5
-		setUserPropBuffer obj ("ColGroupVersion = 1\r\nColGroupInfo = "+((clayer-1) as String)+"\r\nColGroupLastMat = "+ hmat +"\r\nColGroupMatCRC =" + (bscrc32_lower(hmat) as string) )
+		setUserPropBuffer obj ("ColGroupVersion = 1\r\nColGroupInfo = "+((ColLay-1) as String)+"\r\nColGroupLastMat = "+ ColMat +"\r\nColGroupMatCRC =" + (bscrc32_lower(ColMat) as string) )
 	)
 
-	fn wreakhavok hmat clayer= (
+	fn wreakhavok = (
 		shiftP=false
 		if keyboard.shiftPressed do shiftP=true
 
-		--if faces are selected make a new node from them and use that
-		if subObjectLevel==4 then (
+		--if faces or elements are selected make a new node from them and use that
+		if (subObjectLevel==4 or subObjectLevel==5) then (
 			sel = selection[1]
 
-			if selection.count == 1 and classof sel.baseobject == Editable_Poly do (
+			if sel.selectedFaces.count >= 1 and classof sel.baseobject == Editable_Poly do (
 				local polyList = #{}
 				local nName = uniqueName sel.name
-				polyList = polyOp.getFaceSelection sel
+				if (subObjectLevel==4 ) do polyList = polyOp.getFaceSelection sel
+				if (subObjectLevel==5 ) do polyList=polyop.getElementsUsingFace sel sel.selectedFaces
 				polyOp.detachFaces sel polyList delete:false asNode:true name:nName
 
 				newNode=getnodebyname nName
@@ -1343,27 +1347,17 @@ rollout HavokRollout "Copy" width:160 height:128
 
 				select newNode
 				havokMod newNode ShiftP
--- 				newNode.name = "c_" + newNode.name
--- 				collapseStack newNode
--- 				addmodifier newNode(Havok_Shape())
--- 				if shiftP then newNode.modifiers[#Shape].shapeType = 4 else newNode.modifiers[#Shape].shapeType = 5
--- 				setUserPropBuffer newNode ("ColGroupVersion = 1\r\nColGroupInfo = "+((clayer-1) as String)+"\r\nColGroupLastMat = "+ hmat +"\r\nColGroupMatCRC =" + (bscrc32_lower(hmat) as string) )
 
 				select sel
 			)
 		) else (
+			--if no subobject selected clone the lot of the selected objects into a new array
 			arr = (selection as array)
 			maxOps.cloneNodes (arr) cloneType:#copy newNodes:&nco #nodialog
 
 			for i=1 to nco.count do
 			(
-				nco[i].name = "c_" + arr[i].name
-				collapseStack nco[i]
-				addmodifier nco[i] (Havok_Shape())
-				if shiftP then nco[i].modifiers[#Shape].shapeType = 4 else nco[i].modifiers[#Shape].shapeType = 5
-				setUserPropBuffer nco[i] ("ColGroupVersion = 1\r\nColGroupInfo = "+((clayer-1) as String)+"\r\nColGroupLastMat = "+ hmat +"\r\nColGroupMatCRC =" + (bscrc32_lower(hmat) as string) )
-				--layer.addnode nco[i]
-				nco[i].parent=arr[i].parent
+				havokMod nco[i] ShiftP
 			)
 		)
 	)
@@ -1437,8 +1431,9 @@ rollout HavokRollout "Copy" width:160 height:128
 	)
 	on btn_whk pressed do
 	(
-		ColLayer=ddl2.selection
-		wreakhavok ddl_A.selected ddl2.selection
+		ColLay=ddl2.selection
+		ColMat=ddl_A.selected
+		wreakhavok()
 	)
 )
 
