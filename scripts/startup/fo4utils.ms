@@ -1,9 +1,12 @@
-utility fo4utils "FO4 Utilities" -- define the utility name and description string
+macroScript fo4utilsM
+category:"Toolbox"
+internalCategory:"Toolbox"
+toolTip:"FO4Utils"
 (
 
 Global fo4utilsDialog
 
-local vers=("version " + 0.41 as string)
+local vers=("version " + 0.42 as string)
 
 local shadertype=1
 local snapPosCheck=off
@@ -118,7 +121,7 @@ rollout ConvertRollout "Convert Imported Materials"
 
 		--add bitmaps
 		newMat.specularColor = oldMat[#Standard].specular
-		newMat.maps[1]= oldMat[#Standard].diffuseMap 
+		newMat.maps[1]= oldMat[#Standard].diffuseMap
 		newMat.maps[2] = oldMat[#Standard].bumpMap
 		newMat.maps[3] = oldMat[#Standard].maps[4]
 
@@ -128,7 +131,7 @@ rollout ConvertRollout "Convert Imported Materials"
 
 		return newMat
 	)
-	
+
 	--convert to BSBlinn
 	fn standardToBSBlinn objMat =
 		(
@@ -542,7 +545,7 @@ rollout ConvertRollout "Convert Imported Materials"
 
 		return newMat
 	)
-	
+
 	-- BSLightingFX to Standard a Figment
 	fn BSLFxToFigment oldMat =
 	(
@@ -553,7 +556,7 @@ rollout ConvertRollout "Convert Imported Materials"
 		--add the material file if exists
 		if (oldMat.BGSMatInit) then
 			newMat.fileName=oldMat.BGSMatPathParam
-		
+
 		-------Add bitmaps----------
 		--diffuse
  		if (oldMat.DiffuseEnableParam) then (
@@ -591,7 +594,7 @@ rollout ConvertRollout "Convert Imported Materials"
 			newMat.maps[8] =bitmapTexture filename:oldMat.delegate.wrinklesTexture.filename
  			newMat.mapEnables[8]=on
  		)
-		
+
 		newMat.alphaTest=oldMat.AlphaParam
 		newMat.alpha=oldMat.AlphaValueParam
 
@@ -644,9 +647,9 @@ rollout ConvertRollout "Convert Imported Materials"
 		newMat.uScale=oldMat.UScaleParam
 		newMat.vScale=oldMat.VScaleParam
 
-		
+
 		if oldMat.AlphaBlendParam==4 then
-			newMat.blendState==off 
+			newMat.blendState==off
 		else (
 			newMat.alphaBlendMode = case oldMat.AlphaBlendParam of
 			(
@@ -741,7 +744,7 @@ rollout ConvertRollout "Convert Imported Materials"
 			if (classof objMat==BSBlinn) do oldbgsm=objMat.TargetMaterialFile
 			if (classof objMat==BSLightingFX) do oldbgsm=objMat.BGSMatPathParam
 			if (classof objMat==BSEffectFX) do oldbgsm=objMat.BGSMatPathParam
-			
+
 			if (oldbgsm!="") do (
 				print oldbgsm
 				print ShaderType
@@ -794,7 +797,7 @@ rollout ConvertRollout "Convert Imported Materials"
 						obj.material.materialList[i]=(findBS obj.material.materialList[i] obj)
 					)
 				)
-			) 
+			)
 		)
 	)
 
@@ -810,7 +813,7 @@ rollout ConvertRollout "Convert Imported Materials"
 						obj.material.materialList[i]=(findBS obj.material.materialList[i] obj)
 					)
 				)
-			) 
+			)
 		)
 	)
 
@@ -851,7 +854,7 @@ rollout ExportRollout "Exporter"
 		objs=(Selection as array)
 
 		for sel in iSel do (
-			selArr = (getnodebyname fo4utils.ExportRollout.mlbx1.items[sel] all:true)
+			selArr = (getnodebyname fo4utilsM.ExportRollout.mlbx1.items[sel] all:true)
 			for cNode in selArr do (
 				readHide=cNode.isHidden
 				if readHide != true do
@@ -923,7 +926,7 @@ rollout ExportRollout "Exporter"
 
 	--update the inlcude box manually and keep the layer manager open
 	fn updateList=(
-		fo4utils.ExportRollout.mlbx1.items=(getRootNodes())
+		fo4utilsM.ExportRollout.mlbx1.items=(getRootNodes())
 		macros.run "Layers" "LayerManager"
 	)
 
@@ -977,7 +980,7 @@ rollout SnapRollout "Snap utils"
 				local root=GetRootsFromSelection()
 				rchildren=root[1].children
 				index=0
-				
+
 				for obj in test do
 				(
 					if obj.name == "WorkshopConnectPoints"  then
@@ -996,12 +999,12 @@ rollout SnapRollout "Snap utils"
 
 		local CPA=getCPANode()
 		local root=GetRootsFromSelection()
-		
+
 		--try to set current layer by name of root node
 		curLayer=LayerManager.getLayerFromName root[1].name
 		if curLayer!=undefined do
 			(LayerManager.getLayerFromName root[1].name).current = true
-		
+
 		--if no WorkshopConnectPoints dummy exists create one
 		if ( CPA ==undefined ) do (
 			CPA = point name:"WorkshopConnectPoints" size:30 Box:on cross:off axistripod:off centermarker:on constantscreensize:off drawontop:off
@@ -1010,7 +1013,7 @@ rollout SnapRollout "Snap utils"
 			setUserProp CPA SnapNode_BASE_NAME true
 			ActiveSnapNodeRoot = CPA
 		)
-		
+
 		--add the point
 		pt = point name:(snapName) size:40 Box:off cross:off axistripod:on centermarker:on constantscreensize:off drawontop:off
 		pt.wirecolor = yellow
@@ -1128,7 +1131,7 @@ rollout MiscRollout "Misc utils"
 		)
 		select objs
 	)
-	
+
 	fn cloner=(
 		objs=(Selection as array)
 		for obj in objs do (
@@ -1307,6 +1310,14 @@ rollout MiscRollout "Misc utils"
 -------------------------  Copy and Collision  -----------------------------------------------------------
 rollout HavokRollout "Copy" width:160 height:128
 (
+	fn havokMod obj shiftP =(
+		clayer=ddl2.selection
+		obj.name = "c_" + obj.name
+		collapseStack obj
+		addmodifier obj (Havok_Shape())
+		if shiftP then obj.modifiers[#Shape].shapeType = 4 else obj.modifiers[#Shape].shapeType = 5
+		setUserPropBuffer obj ("ColGroupVersion = 1\r\nColGroupInfo = "+((clayer-1) as String)+"\r\nColGroupLastMat = "+ hmat +"\r\nColGroupMatCRC =" + (bscrc32_lower(hmat) as string) )
+	)
 
 	fn wreakhavok hmat clayer= (
 		shiftP=false
@@ -1331,11 +1342,12 @@ rollout HavokRollout "Copy" width:160 height:128
 				)
 
 				select newNode
-				newNode.name = "c_" + newNode.name
-				collapseStack newNode
-				addmodifier newNode(Havok_Shape())
-				if shiftP then newNode.modifiers[#Shape].shapeType = 4 else newNode.modifiers[#Shape].shapeType = 5
-				setUserPropBuffer newNode ("ColGroupVersion = 1\r\nColGroupInfo = "+((clayer-1) as String)+"\r\nColGroupLastMat = "+ hmat +"\r\nColGroupMatCRC =" + (bscrc32_lower(hmat) as string) )
+				havokMod newNode ShiftP
+-- 				newNode.name = "c_" + newNode.name
+-- 				collapseStack newNode
+-- 				addmodifier newNode(Havok_Shape())
+-- 				if shiftP then newNode.modifiers[#Shape].shapeType = 4 else newNode.modifiers[#Shape].shapeType = 5
+-- 				setUserPropBuffer newNode ("ColGroupVersion = 1\r\nColGroupInfo = "+((clayer-1) as String)+"\r\nColGroupLastMat = "+ hmat +"\r\nColGroupMatCRC =" + (bscrc32_lower(hmat) as string) )
 
 				select sel
 			)
@@ -1410,6 +1422,7 @@ rollout HavokRollout "Copy" width:160 height:128
 		)
 		return BSHavokMaterialTypes
 	)
+
 	edittext edt_A "Name"
 	button btn_cpy "Copy as New" toolTip:"Copy sel into a new dummy and layer"
 	group "Collision" (
@@ -1418,13 +1431,13 @@ rollout HavokRollout "Copy" width:160 height:128
 		button btn_whk "Copy as Collsion" toolTip:"Copy sel as havok shape - Mesh.\nHold Shift for Convex Hull"
 	)
 
-
 	on btn_cpy pressed do
 	(
 		if ((edt_A.text != "") and ($ != undefined)) then makebaby edt_A.text else setFocus edt_A
 	)
 	on btn_whk pressed do
 	(
+		ColLayer=ddl2.selection
 		wreakhavok ddl_A.selected ddl2.selection
 	)
 )
@@ -1439,32 +1452,36 @@ fn launcher=(
 	try(destroyDialog fo4utilsDialog)catch()
 
 	fo4utilsDialog = newRolloutFloater "FO4 Utils" 220 720
-	addrollout fo4utils.ConvertRollout fo4utilsDialog rolledUp: true
-	addrollout fo4utils.SnapRollout fo4utilsDialog rolledUp: true
-	addrollout fo4utils.HavokRollout fo4utilsDialog rolledUp: true
-	addrollout fo4utils.MiscRollout fo4utilsDialog rolledUp: true
-	addrollout fo4utils.ExportRollout fo4utilsDialog
-	addrollout fo4utils.AboutRollout fo4utilsDialog  border:false
+	addrollout ConvertRollout fo4utilsDialog rolledUp: true
+	addrollout SnapRollout fo4utilsDialog rolledUp: true
+	addrollout HavokRollout fo4utilsDialog rolledUp: true
+	addrollout MiscRollout fo4utilsDialog rolledUp: true
+	addrollout ExportRollout fo4utilsDialog
+	addrollout AboutRollout fo4utilsDialog  border:false
 
 	--add "Custom" to Snap drop down
-	fo4utils.SnapRollout.ddl1.items= append fo4utils.SnapRollout.ddl1.items "Custom"
+	SnapRollout.ddl1.items= append SnapRollout.ddl1.items "Custom"
+
+	macros.run "Layers" "LayerManager"
  )
 
-on fo4utils open do
-(
-	macros.run "Layers" "LayerManager"
+--on fo4utils open do
+--(
+	--macros.run "Layers" "LayerManager"
 	--callbacks.addScript #filePostOpen "fo4utils.updateList()" id:#fpopen
 
-	fo4utils.launcher()
-)
+	--fo4utils.launcher()
+--)
 
-on fo4utils close do
-(
-	try (closeRolloutFloater fo4utilsDialog) catch(format"error closing stuff\n")
-	try (DestroyDialog fo4utilsDialog) catch()
+--on fo4utils close do
+--(
+	--try (closeRolloutFloater fo4utilsDialog) catch(format"error closing stuff\n")
+	--try (DestroyDialog fo4utilsDialog) catch()
 
-	callbacks.removeScripts id:#relink
+	--callbacks.removeScripts id:#relink
 	--callbacks.removeScripts id:#fpopen
-)
+--)
+
+launcher()
 
 ) --end util
