@@ -1019,6 +1019,7 @@ rollout SnapRollout "Snap utils"
 		pt.wirecolor = yellow
 		setUserProp pt "sgokeep" 1
 
+		--set default posistion of the snap, toogled by the checkbox
 		if snapPosCheck == off do (
 			snapPos = case snapName of --or snapName?
 			(
@@ -1433,6 +1434,8 @@ rollout HavokRollout "Copy" width:160 height:128
 	(
 		ColLay=ddl2.selection
 		ColMat=ddl_A.selected
+		Print("lay: "+ColLay as string)
+		Print("mat: "+ColMat as string)
 		wreakhavok()
 	)
 )
