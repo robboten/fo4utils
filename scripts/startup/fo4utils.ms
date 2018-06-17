@@ -6,7 +6,7 @@ toolTip:"FO4Utils"
 
 Global fo4utilsDialog
 
-local vers=("version " + 0.42 as string)
+local vers=("version " + 0.43 as string)
 
 local shadertype=1
 local snapPosCheck=off
@@ -971,49 +971,44 @@ rollout SnapRollout "Snap utils"
 
 	fn getCPANode=(
 		local CPA=undefined
-		if ($ != undefined) do (
+		if ($ != undefined) then (
 			if ($.name == "WorkshopConnectPoints") then (
 				CPA=$
-			) else if ($.parent.name == "WorkshopConnectPoints") then (
-				CPA=$.parent
-			) else  (
-				local root=GetRootsFromSelection()
-				rchildren=root[1].children
-				index=0
+			) else if ($.parent!=undefined) then (
+				if ($.parent.name == "WorkshopConnectPoints") then (
+					CPA=$.parent
+				) else  (
+					local root=GetRootsFromSelection()
+					rchildren=root[1].children
+					index=0
 
-				for obj in test do
-				(
-					if obj.name == "WorkshopConnectPoints"  then
-						exit
-					else
-						index = index + 1
+					for obj in test do
+					(
+						if obj.name == "WorkshopConnectPoints"  then
+							exit
+						else
+							index = index + 1
+					)
+					if index > 0 do
+						CPA=rchildren[index+1]
 				)
-				if index > 0 do
-					CPA=rchildren[index+1]
 			)
 		)
 		return CPA
 	)
 
 	fn makeSnap snapName=(
-
-		local CPA=getCPANode()
+		--press shift while making snap to insert into a parent
+		local shiftP=false
+		if keyboard.shiftPressed do shiftP=true
 		local root=GetRootsFromSelection()
 
 		--try to set current layer by name of root node
-		curLayer=LayerManager.getLayerFromName root[1].name
-		if curLayer!=undefined do
-			(LayerManager.getLayerFromName root[1].name).current = true
-
-		--if no WorkshopConnectPoints dummy exists create one
-		if ( CPA ==undefined ) do (
-			CPA = point name:"WorkshopConnectPoints" size:30 Box:on cross:off axistripod:off centermarker:on constantscreensize:off drawontop:off
-			setUserProp CPA "sgokeep" 1
-			CPA.wirecolor = blue
-			setUserProp CPA SnapNode_BASE_NAME true
-			ActiveSnapNodeRoot = CPA
+		if root[1]!=undefined then (
+			curLayer=LayerManager.getLayerFromName root[1].name
+			if curLayer!=undefined do
+				(LayerManager.getLayerFromName root[1].name).current = true
 		)
-
 		--add the point
 		pt = point name:(snapName) size:40 Box:off cross:off axistripod:on centermarker:on constantscreensize:off drawontop:off
 		pt.wirecolor = yellow
@@ -1042,8 +1037,24 @@ rollout SnapRollout "Snap utils"
 				default: pt.pos = [0,0,0]
 			)
 		)
+		if selection!=undefined do
+			pt.parent = selection[1]
 
-		pt.parent = CPA
+		if shiftP then (
+			local CPA=getCPANode()
+
+			--if no WorkshopConnectPoints dummy exists create one
+			if ( CPA ==undefined ) do (
+				CPA = point name:"WorkshopConnectPoints" size:30 Box:on cross:off axistripod:off centermarker:on constantscreensize:off drawontop:off
+				setUserProp CPA "sgokeep" 1
+				CPA.wirecolor = blue
+				setUserProp CPA SnapNode_BASE_NAME true
+				ActiveSnapNodeRoot = CPA
+			)
+
+			pt.parent = CPA
+		)
+
 		select pt
 	)
 
@@ -1070,13 +1081,7 @@ rollout SnapRollout "Snap utils"
 
 	on btn_snap pressed do
 	(
-		shiftP=false
-		if keyboard.shiftPressed do shiftP=true
 
-		if shiftP then (
-			print "deletetion snaps will be added later"
-			--delIniSetting iniFolder "Snaps"
-		)	else 	(
 			if ddl1.selected == "Custom" then (
 				if edt1.text != "" do makeSnap(edt1.text+ddl3.selected)
 				--Because insertItem returns OK instead of the resulting array, --you cannot assign the result of the expression directly to the property. --Instead, you have to get a copy of the items array in a local variable...
@@ -1093,7 +1098,7 @@ rollout SnapRollout "Snap utils"
 			) else (
 				makeSnap(ddl1.selected+ddl3.selected)
 			)
-		)
+
 	)
 
 	on btnRefreshValues pressed do
