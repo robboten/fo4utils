@@ -967,7 +967,7 @@ rollout SnapRollout "Snap utils"
 	edittext edt1 "" enabled:false
 	dropdownList ddl3 "" items:#("", "-Dif", "-Dif2")  across:3
 	checkbox snapPosOn "" toolTip:"Zero Transform" align:#center
-	button btn_snap "Make" width:64
+	button btn_snap "Make" width:64  tooltip:"Hold Shift to parent under a new WorkshopConnectPoint."
 
 	fn getCPANode=(
 		local CPA=undefined
